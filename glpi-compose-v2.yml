@@ -1,0 +1,35 @@
+services:
+  glpi:
+    image: rosnertech/glpi:10.0.18-melhorado
+    container_name: lab_rosnertech_glpi
+    ports:
+      - "80:8888"
+    env_file:
+      - .env
+    volumes:
+      - glpi_files:/var/www/html/glpi/files
+      - glpi_config:/var/www/html/glpi/config
+      - glpi_marketplace:/var/www/html/glpi/marketplace
+    depends_on:
+      - mysql
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.3
+    container_name: lab_rosnertech_mysql
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+volumes:
+  glpi_files:
+  glpi_config:
+  glpi_marketplace:
+  mysql_data:

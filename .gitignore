@@ -1,0 +1,41 @@
+# Arquivos de ambiente e credenciais
+.env
+.env.*
+!.env.example
+
+# Dados persistentes do laboratório
+mysql_data/
+glpi_data/
+volumes/
+data/
+backups/
+
+# Arquivos temporários
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+
+# Downloads e arquivos compactados
+*.tgz
+*.tar.gz
+*.tar.bz2
+*.zip
+
+# Logs e arquivos gerados pelo GLPI
+files/_log/
+files/_cache/
+files/_dumps/
+files/_sessions/
+files/_tmp/
+
+# IDEs e sistemas operacionais
+.idea/
+.vscode/
+*.code-workspace
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml

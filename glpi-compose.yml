@@ -1,0 +1,17 @@
+version: '3.9'
+
+services:
+  glpi:
+    image: lab_rosnertech/glpi:10.0.14
+    container_name: lab_rosnertech_glpi
+    ports:
+      - "80:80"
+    volumes:
+      - /var/lab/glpi:/var/www/html/glpi:rw
+
+  mysql:
+    image: lab_rosnertech/mysql:8.3.0
+    container_name: lab_rosnertech_mysql
+
+    volumes:
+      - /var/lab/mysql:/var/lib/mysql

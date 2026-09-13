@@ -1,0 +1,58 @@
+FROM debian:12.5-slim
+
+LABEL org.opencontainers.image.authors="rosner@rosnertech.com.br"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+ARG GLPI_VERSION=10.0.18
+ARG GLPI_INVENTORY_VERSION=latest
+ARG BEHAVIORS_REF=master
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       apache2 ca-certificates curl cron jq lsb-release tar unzip wget \
+       php8.2 php8.2-mysql php8.2-ldap php8.2-xmlrpc php8.2-imap \
+       php8.2-curl php8.2-gd php8.2-mbstring php8.2-xml php-cas \
+       php8.2-intl php8.2-zip php8.2-bz2 php8.2-redis \
+       libldap-common libsasl2-2 libsasl2-modules libsasl2-modules-db \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN sed -i 's/Listen 80/Listen 8888/' /etc/apache2/ports.conf \
+    && sed -i 's/:80/:8888/' /etc/apache2/sites-available/000-default.conf
+
+RUN mkdir -p /var/www/html/glpi \
+    && cd /tmp \
+    && wget -O glpi.tgz "https://github.com/glpi-project/glpi/releases/download/${GLPI_VERSION}/glpi-${GLPI_VERSION}.tgz" \
+    && tar -xzf glpi.tgz \
+    && cp -R glpi/. /var/www/html/glpi/ \
+    && rm -rf /tmp/glpi /tmp/glpi.tgz
+
+RUN mkdir -p /var/www/html/glpi/plugins/glpiinventory \
+    && cd /tmp \
+    && if [ "${GLPI_INVENTORY_VERSION}" = "latest" ]; then \
+         INVENTORY_URL="$$(curl -fsSL https://api.github.com/repos/glpi-project/glpi-inventory-plugin/releases/latest | jq -r '.assets[] | select(.name | endswith(".zip")) | .browser_download_url' | head -n 1)"; \
+       else \
+         INVENTORY_URL="https://github.com/glpi-project/glpi-inventory-plugin/releases/download/${GLPI_INVENTORY_VERSION}/glpiinventory-${GLPI_INVENTORY_VERSION}.zip"; \
+       fi \
+    && test -n "$${INVENTORY_URL}" \
+    && wget -O glpiinventory.zip "$${INVENTORY_URL}" \
+    && unzip -q glpiinventory.zip -d /tmp/glpiinventory \
+    && INVENTORY_DIR="$$(find /tmp/glpiinventory -mindepth 1 -maxdepth 1 -type d | head -n 1)" \
+    && cp -R "$${INVENTORY_DIR}/." /var/www/html/glpi/plugins/glpiinventory/ \
+    && rm -rf /tmp/glpiinventory /tmp/glpiinventory.zip
+
+RUN cd /tmp \
+    && wget -O behaviors.zip "https://github.com/InfotelGLPI/behaviors/archive/refs/heads/${BEHAVIORS_REF}.zip" \
+    && unzip -q behaviors.zip \
+    && mkdir -p /var/www/html/glpi/plugins/behaviors \
+    && cp -R "behaviors-${BEHAVIORS_REF}/." /var/www/html/glpi/plugins/behaviors/ \
+    && rm -rf /tmp/behaviors.zip "/tmp/behaviors-${BEHAVIORS_REF}"
+
+RUN chown -R www-data:www-data /var/www/html/glpi \
+    && find /var/www/html/glpi -type d -exec chmod 775 {} \; \
+    && find /var/www/html/glpi -type f -exec chmod 664 {} \; \
+    && echo "* * * * * www-data /usr/bin/php8.2 /var/www/html/glpi/front/cron.php" >> /etc/crontab \
+    && sed -i 's/^;session.cookie_httponly =/session.cookie_httponly = on/' /etc/php/8.2/apache2/php.ini
+
+EXPOSE 8888
+CMD ["apache2ctl", "-D", "FOREGROUND"]
