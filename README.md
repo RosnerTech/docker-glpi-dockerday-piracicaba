@@ -8,7 +8,7 @@
 ![Apache](https://img.shields.io/badge/Apache-D22128?style=for-the-badge&logo=apache&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 
-Case apresentado no DockerDay Região Metropolitana de Piracicaba sobre a criação e publicação de uma imagem Docker personalizada do GLPI.
+Case apresentado no DockerDay Região Metropolitana de Piracicaba 2026 sobre a criação e publicação de uma imagem Docker personalizada do GLPI.
 
 ## Sobre o projeto
 
